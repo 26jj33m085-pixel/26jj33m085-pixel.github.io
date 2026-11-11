@@ -4,421 +4,557 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>School Beat! - 학교의 리듬</title>
+<title>School Beat: Rhythm Path</title>
 <style>
 * { box-sizing: border-box; }
+
 body {
   margin: 0;
   min-height: 100vh;
-  color: #fff;
+  background: #101426;
+  color: white;
   font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #202b50, #51436e);
   text-align: center;
-  padding: 24px 12px;
+  padding: 20px 12px;
 }
-h1 { font-size: 38px; margin: 8px 0; }
-.subtitle { color: #d6d8ed; margin-bottom: 22px; }
-.game {
-  max-width: 540px;
+
+h1 {
+  font-size: 32px;
+  margin: 8px 0;
+  color: #ffe28a;
+}
+
+.subtitle {
+  color: #bfc7e8;
+  margin-bottom: 18px;
+}
+
+.panel {
+  max-width: 650px;
   margin: auto;
-  padding: 20px;
-  border: 1px solid #ffffff30;
-  border-radius: 22px;
-  background: #111a35cc;
-  box-shadow: 0 15px 40px #0005;
+  padding: 18px;
+  background: #1b2340;
+  border: 1px solid #ffffff25;
+  border-radius: 20px;
+  box-shadow: 0 12px 35px #0005;
 }
+
 .stats {
   display: flex;
   justify-content: space-around;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
+
 .stat {
-  background: #ffffff12;
-  padding: 10px;
-  border-radius: 12px;
   flex: 1;
+  padding: 10px 4px;
+  border-radius: 12px;
+  background: #ffffff10;
 }
-.stat small { display: block; color: #bfc8e8; }
-.stat strong { font-size: 22px; }
+
+.stat small {
+  display: block;
+  color: #aeb9df;
+  font-size: 12px;
+}
+
+.stat strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 22px;
+}
+
 select, button {
   border: 0;
-  border-radius: 12px;
-  padding: 12px 18px;
-  font-size: 16px;
+  border-radius: 11px;
+  padding: 12px 16px;
+  font-size: 15px;
   font-weight: bold;
 }
-select { margin: 8px; background: #fff; }
+
+select {
+  background: #fff;
+  color: #222;
+  margin: 8px;
+}
+
 button {
-  background: #ffcf66;
-  color: #25213b;
   cursor: pointer;
-}
-button:hover { filter: brightness(1.08); }
-#arena {
-  height: 430px;
-  margin: 18px auto;
-  max-width: 380px;
-  position: relative;
-  overflow: hidden;
-  border-radius: 14px;
-  border: 2px solid #ffffff35;
-  background:
-    repeating-linear-gradient(90deg,
-      #ffffff08 0px, #ffffff08 1px,
-      transparent 1px, transparent 25%);
-}
-.lanes {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-}
-.lane {
-  position: relative;
-  border-right: 1px solid #ffffff20;
-}
-.lane:last-child { border: 0; }
-.hitline {
-  position: absolute;
-  top: 345px;
-  width: 100%;
-  height: 4px;
   background: #ffcf66;
-  box-shadow: 0 0 12px #ffcf66;
+  color: #29233c;
 }
-.note {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 13px;
-  display: grid;
-  place-items: center;
-  font-size: 25px;
-  box-shadow: 0 4px 14px #0005;
+
+button:hover {
+  filter: brightness(1.1);
 }
-.keylabel {
-  position: absolute;
-  bottom: 10px;
-  left: 0;
+
+#start {
+  margin: 10px;
+  min-width: 150px;
+  font-size: 17px;
+}
+
+canvas {
+  display: block;
   width: 100%;
-  color: #fff9;
-  font-size: 20px;
+  height: 430px;
+  margin: 12px auto;
+  border-radius: 15px;
+  background: #11182e;
+  border: 2px solid #ffffff25;
+  touch-action: manipulation;
+}
+
+#message {
+  min-height: 34px;
+  font-size: 21px;
   font-weight: bold;
+  color: #ffe28a;
 }
-#judgement {
-  min-height: 32px;
-  font-size: 22px;
-  font-weight: bold;
-  color: #ffcf66;
+
+.instructions {
+  color: #bdc5e0;
+  font-size: 13px;
+  line-height: 1.8;
 }
-.controls {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+
+#levelInfo {
+  color: #aeb9df;
+  margin: 5px;
 }
-.controls button {
-  padding: 14px 3px;
-  background: #59658e;
-  color: white;
-}
-.controls button:active { background: #ffcf66; color: #222; }
-.help { color: #c9cce0; font-size: 13px; line-height: 1.7; }
-#start { margin: 12px; }
-@media(max-width: 400px) {
-  h1 { font-size: 30px; }
-  .game { padding: 12px; }
-  .note { width: 40px; height: 40px; }
+
+@media(max-width: 450px) {
+  h1 { font-size: 25px; }
+  .panel { padding: 10px; }
+  canvas { height: 390px; }
 }
 </style>
 </head>
+
 <body>
 
-<h1>🎵 School Beat!</h1>
-<p class="subtitle">학교에서 들려오는 소리를 리듬에 맞춰!</p>
+<h1>🎵 School Beat</h1>
+<p class="subtitle">RHYTHM PATH · 학교의 리듬을 따라가!</p>
 
-<div class="game">
+<div class="panel">
+
   <div class="stats">
-    <div class="stat"><small>SCORE</small><strong id="score">0</strong></div>
-    <div class="stat"><small>COMBO</small><strong id="combo">0</strong></div>
-    <div class="stat"><small>TIME</small><strong id="time">55</strong></div>
-  </div>
-
-  <label for="difficulty">난이도 </label>
-  <select id="difficulty">
-    <option value="easy">쉬움</option>
-    <option value="normal" selected>보통</option>
-    <option value="fast">빠르게</option>
-  </select>
-
-  <div id="arena">
-    <div class="lanes" id="lanes">
-      <div class="lane"><div class="keylabel">D ✏️</div></div>
-      <div class="lane"><div class="keylabel">F 🏀</div></div>
-      <div class="lane"><div class="keylabel">J 🔔</div></div>
-      <div class="lane"><div class="keylabel">K 👟</div></div>
+    <div class="stat">
+      <small>SCORE</small>
+      <strong id="score">0</strong>
     </div>
-    <div class="hitline"></div>
+    <div class="stat">
+      <small>COMBO</small>
+      <strong id="combo">0</strong>
+    </div>
+    <div class="stat">
+      <small>TILE</small>
+      <strong id="tile">0 / 50</strong>
+    </div>
   </div>
 
-  <div id="judgement">게임을 시작해 봐!</div>
+  <div>
+    <label for="difficulty">난이도 선택</label>
+    <br>
+    <select id="difficulty">
+      <option value="0">1단계 - 연습</option>
+      <option value="1">2단계 - 보통</option>
+      <option value="2">3단계 - 어려움</option>
+      <option value="3">4단계 - 상당히 빠르게</option>
+      <option value="4">5단계 - 불가능한</option>
+      <option value="5">6단계 - 음속</option>
+    </select>
+  </div>
+
+  <p id="levelInfo">1단계 · 연습</p>
+
+  <canvas id="game" width="600" height="430"></canvas>
+
+  <div id="message">게임 시작을 눌러 봐!</div>
+
   <button id="start">▶ 게임 시작</button>
 
-  <div class="controls">
-    <button data-key="d">D ✏️</button>
-    <button data-key="f">F 🏀</button>
-    <button data-key="j">J 🔔</button>
-    <button data-key="k">K 👟</button>
-  </div>
-
-  <p class="help">
-    노트가 노란색 선에 도착할 때 해당 키를 눌러!<br>
-    PERFECT +100점 · GOOD +50점 · MISS 0점
+  <p class="instructions">
+    공이 다음 타일에 도착할 때 박자를 맞춰 눌러!<br>
+    SPACE / 마우스 클릭 / 화면 터치<br>
+    PERFECT +100 · GOOD +50 · MISS 게임 종료
   </p>
+
 </div>
 
 <script>
-const arena = document.getElementById("arena");
-const lanes = [...document.querySelectorAll(".lane")];
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
 const scoreEl = document.getElementById("score");
 const comboEl = document.getElementById("combo");
-const timeEl = document.getElementById("time");
-const judgement = document.getElementById("judgement");
+const tileEl = document.getElementById("tile");
+const message = document.getElementById("message");
 const startButton = document.getElementById("start");
 const difficulty = document.getElementById("difficulty");
+const levelInfo = document.getElementById("levelInfo");
 
-const keys = ["d", "f", "j", "k"];
-const emojis = ["✏️", "🏀", "🔔", "👟"];
-const colors = ["#f4c95d", "#65b8ff", "#ff8cba", "#9ce3a3"];
+const levels = [
+  { name: "연습", interval: 750, window: 120 },
+  { name: "보통", interval: 620, window: 100 },
+  { name: "어려움", interval: 500, window: 80 },
+  { name: "상당히 빠르게", interval: 360, window: 60 },
+  { name: "불가능한", interval: 260, window: 42 },
+  { name: "음속", interval: 180, window: 28 }
+];
 
-let notes = [];
 let score = 0;
 let combo = 0;
+let tile = 0;
 let playing = false;
-let startTime = 0;
-let lastSpawn = 0;
-let animationId = null;
+let lastHit = 0;
+let currentLevel = levels[0];
 let audio = null;
-let best = Number(localStorage.getItem("schoolBeatBest") || 0);
+let animation = null;
+let path = [];
+let particles = [];
 
-const hitY = 345;
-const noteSpeed = {
-  easy: 220,
-  normal: 270,
-  fast: 330
-};
-const spawnInterval = {
-  easy: 850,
-  normal: 680,
-  fast: 520
-};
+const TOTAL = 50;
 
-function sound(lane) {
+function makePath() {
+  path = [];
+
+  for (let i = 0; i < TOTAL + 1; i++) {
+    const x = 65 + (i % 5) * 115;
+    const row = Math.floor(i / 5);
+    const direction = row % 2 === 0 ? 1 : -1;
+    const actualX = direction === 1 ? x : 65 + (4 - (i % 5)) * 115;
+
+    const y = 65 + row * 75 + Math.sin(i * 1.7) * 13;
+
+    path.push({
+      x: actualX,
+      y: Math.min(390, y)
+    });
+  }
+}
+
+function sound() {
   try {
-    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audio) {
+      audio = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
     if (audio.state === "suspended") audio.resume();
 
     const osc = audio.createOscillator();
     const gain = audio.createGain();
+
     osc.connect(gain);
     gain.connect(audio.destination);
 
     const now = audio.currentTime;
+    const type = tile % 4;
 
-    if (lane === 0) {
-      osc.type = "square";
-      osc.frequency.setValueAtTime(1000, now);
-      osc.frequency.exponentialRampToValueAtTime(500, now + 0.04);
-    } else if (lane === 1) {
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(110, now);
-      osc.frequency.exponentialRampToValueAtTime(45, now + 0.15);
-    } else if (lane === 2) {
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(880, now);
-      osc.frequency.exponentialRampToValueAtTime(440, now + 0.35);
-    } else {
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.exponentialRampToValueAtTime(80, now + 0.07);
+    const frequencies = [850, 130, 1100, 220];
+
+    osc.type = type === 1 ? "sine" : "triangle";
+    osc.frequency.setValueAtTime(frequencies[type], now);
+
+    if (type === 2) {
+      osc.frequency.exponentialRampToValueAtTime(550, now + 0.18);
     }
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
 
     osc.start(now);
-    osc.stop(now + 0.36);
+    osc.stop(now + 0.2);
   } catch (e) {
-    console.log("Audio is unavailable", e);
+    console.log(e);
   }
 }
 
 function updateStats() {
   scoreEl.textContent = score;
   comboEl.textContent = combo;
+  tileEl.textContent = tile + " / " + TOTAL;
 }
 
-function spawnNote(now) {
-  const lane = Math.floor(Math.random() * 4);
-  const note = document.createElement("div");
-  note.className = "note";
-  note.textContent = emojis[lane];
-  note.style.background = colors[lane];
-  note.style.color = "#20213a";
-  lanes[lane].appendChild(note);
+function drawBackground() {
+  ctx.fillStyle = "#11182e";
+  ctx.fillRect(0, 0, 600, 430);
 
-  notes.push({
-    lane,
-    y: -48,
-    element: note,
-    hit: false
-  });
-  lastSpawn = now;
-}
+  ctx.strokeStyle = "#ffffff08";
+  ctx.lineWidth = 1;
 
-function showResult(message, color = "#ffcf66") {
-  judgement.textContent = message;
-  judgement.style.color = color;
-}
-
-function hit(lane) {
-  if (!playing) return;
-
-  sound(lane);
-
-  let target = null;
-  let bestDistance = Infinity;
-
-  for (const note of notes) {
-    if (note.lane !== lane || note.hit) continue;
-    const distance = Math.abs(note.y - hitY);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      target = note;
-    }
+  for (let x = 0; x < 600; x += 30) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, 430);
+    ctx.stroke();
   }
 
-  if (!target || bestDistance > 85) {
-    combo = 0;
-    updateStats();
-    showResult("MISS", "#ff7070");
+  for (let y = 0; y < 430; y += 30) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(600, y);
+    ctx.stroke();
+  }
+}
+
+function drawPath() {
+  if (!path.length) return;
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(path[0].x, path[0].y);
+
+  for (let i = 1; i < path.length; i++) {
+    ctx.lineTo(path[i].x, path[i].y);
+  }
+
+  ctx.strokeStyle = "#59658a";
+  ctx.lineWidth = 9;
+  ctx.stroke();
+
+  for (let i = 0; i < path.length; i++) {
+    const p = path[i];
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 13, 0, Math.PI * 2);
+
+    if (i < tile) {
+      ctx.fillStyle = "#70e4c2";
+    } else if (i === tile) {
+      ctx.fillStyle = "#ffe28a";
+    } else {
+      ctx.fillStyle = "#66739e";
+    }
+
+    ctx.fill();
+
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+function getBallPosition(now) {
+  const a = path[tile];
+  const b = path[Math.min(tile + 1, TOTAL)];
+
+  if (!playing || tile >= TOTAL) return a;
+
+  const progress = Math.min(
+    1,
+    Math.max(0, (now - lastHit) / currentLevel.interval)
+  );
+
+  return {
+    x: a.x + (b.x - a.x) * progress,
+    y: a.y + (b.y - a.y) * progress
+  };
+}
+
+function drawBall(now) {
+  const p = getBallPosition(now);
+
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 15, 0, Math.PI * 2);
+  ctx.fillStyle = "#ff6d91";
+  ctx.shadowColor = "#ff6d91";
+  ctx.shadowBlur = 22;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.beginPath();
+  ctx.arc(p.x - 5, p.y - 5, 4, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.globalAlpha = Math.max(0, p.life / 25);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+  });
+
+  ctx.globalAlpha = 1;
+  particles = particles.filter(p => p.life > 0);
+}
+
+function burst(x, y) {
+  for (let i = 0; i < 12; i++) {
+    const angle = Math.PI * 2 * i / 12;
+
+    particles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * 2.5,
+      vy: Math.sin(angle) * 2.5,
+      life: 25,
+      color: "#ffe28a"
+    });
+  }
+}
+
+function draw(now) {
+  drawBackground();
+  drawPath();
+  drawParticles();
+
+  if (tile <= TOTAL) {
+    drawBall(now);
+  }
+}
+
+function hit() {
+  if (!playing) return;
+
+  const now = performance.now();
+  const elapsed = now - lastHit;
+  const difference = Math.abs(elapsed - currentLevel.interval);
+
+  if (difference > currentLevel.window) {
+    if (elapsed < currentLevel.interval - currentLevel.window) {
+      message.textContent = "TOO EARLY!";
+      message.style.color = "#ffad72";
+      return;
+    }
+
+    gameOver();
     return;
   }
 
-  target.hit = true;
-  target.element.remove();
+  const p = path[tile + 1];
+  const perfectLimit = currentLevel.window * 0.45;
 
-  if (bestDistance < 27) {
+  if (difference <= perfectLimit) {
     score += 100;
     combo++;
-    showResult("PERFECT! +100", "#ffe078");
+    message.textContent = "PERFECT! +100";
+    message.style.color = "#ffe28a";
   } else {
     score += 50;
     combo++;
-    showResult("GOOD! +50", "#8de5ff");
+    message.textContent = "GOOD! +50";
+    message.style.color = "#8de5ff";
   }
 
-  notes = notes.filter(n => n !== target);
+  tile++;
+  lastHit = now;
+
+  sound();
+  if (p) burst(p.x, p.y);
+
   updateStats();
+
+  if (tile >= TOTAL) {
+    winGame();
+  }
 }
 
-function finishGame() {
+function gameOver() {
   playing = false;
-  cancelAnimationFrame(animationId);
+  cancelAnimationFrame(animation);
 
-  notes.forEach(n => n.element.remove());
-  notes = [];
-
-  best = Math.max(best, score);
-  localStorage.setItem("schoolBeatBest", best);
-
-  showResult("게임 종료! 최종 점수: " + score, "#ffe078");
-  startButton.textContent = "↻ 다시 하기";
+  message.textContent = "MISS! 게임 종료 · 점수: " + score;
+  message.style.color = "#ff7187";
+  startButton.textContent = "↻ 다시 도전";
 }
 
-function gameLoop(timestamp) {
+function winGame() {
+  playing = false;
+  cancelAnimationFrame(animation);
+
+  score += combo * 20;
+  updateStats();
+
+  message.textContent = "🎉 CLEAR! 최종 점수: " + score;
+  message.style.color = "#ffe28a";
+  startButton.textContent = "↻ 다시 플레이";
+}
+
+function loop(now) {
   if (!playing) return;
 
-  const elapsed = (timestamp - startTime) / 1000;
-  const remaining = Math.max(0, 55 - Math.floor(elapsed));
-  timeEl.textContent = remaining;
+  const elapsed = now - lastHit;
 
-  if (remaining <= 0) {
-    finishGame();
+  if (elapsed > currentLevel.interval + currentLevel.window) {
+    gameOver();
+    draw(now);
     return;
   }
 
-  const speed = noteSpeed[difficulty.value];
-  const interval = spawnInterval[difficulty.value];
-  const delta = gameLoop.lastTimestamp
-    ? Math.min((timestamp - gameLoop.lastTimestamp) / 1000, 0.05)
-    : 0;
-  gameLoop.lastTimestamp = timestamp;
-
-  if (timestamp - lastSpawn >= interval) {
-    spawnNote(timestamp);
-  }
-
-  for (let i = notes.length - 1; i >= 0; i--) {
-    const note = notes[i];
-    note.y += speed * delta;
-    note.element.style.top = note.y + "px";
-
-    if (note.y > hitY + 85) {
-      note.element.remove();
-      notes.splice(i, 1);
-      combo = 0;
-      updateStats();
-      showResult("MISS", "#ff7070");
-    }
-  }
-
-  animationId = requestAnimationFrame(gameLoop);
+  draw(now);
+  animation = requestAnimationFrame(loop);
 }
 
 function startGame() {
-  cancelAnimationFrame(animationId);
-  notes.forEach(n => n.element.remove());
-  notes = [];
+  cancelAnimationFrame(animation);
+
+  currentLevel = levels[Number(difficulty.value)];
 
   score = 0;
   combo = 0;
+  tile = 0;
+  particles = [];
+
+  makePath();
   updateStats();
-  timeEl.textContent = "55";
-  showResult("준비! 리듬을 타 봐!");
-  startButton.textContent = "게임 진행 중";
 
-  if (audio && audio.state === "suspended") audio.resume();
-
+  lastHit = performance.now();
   playing = true;
-  startTime = performance.now();
-  lastSpawn = 0;
-  gameLoop.lastTimestamp = 0;
-  animationId = requestAnimationFrame(gameLoop);
+
+  levelInfo.textContent =
+    (Number(difficulty.value) + 1) + "단계 · " +
+    currentLevel.name + " · " +
+    Math.round(60000 / currentLevel.interval) + " BPM";
+
+  message.textContent = "박자를 맞춰!";
+  message.style.color = "#ffe28a";
+
+  startButton.textContent = "플레이 중";
+
+  if (audio && audio.state === "suspended") {
+    audio.resume();
+  }
+
+  draw(lastHit);
+  animation = requestAnimationFrame(loop);
 }
-
-document.addEventListener("keydown", event => {
-  if (event.repeat) return;
-  const key = event.key.toLowerCase();
-  const lane = keys.indexOf(key);
-  if (lane !== -1) hit(lane);
-});
-
-document.querySelectorAll("[data-key]").forEach(button => {
-  button.addEventListener("pointerdown", () => {
-    hit(keys.indexOf(button.dataset.key));
-  });
-});
 
 startButton.addEventListener("click", () => {
   if (!playing) startGame();
 });
 
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" || e.code === "Enter") {
+    e.preventDefault();
+    hit();
+  }
+});
+
+canvas.addEventListener("pointerdown", () => {
+  hit();
+});
+
+difficulty.addEventListener("change", () => {
+  const n = Number(difficulty.value);
+  levelInfo.textContent =
+    (n + 1) + "단계 · " + levels[n].name;
+});
+
+makePath();
+draw(0);
 </script>
+
 </body>
 </html>
-
