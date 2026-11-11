@@ -1,1 +1,424 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Beat! - 학교의 리듬</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #202b50, #51436e);
+  text-align: center;
+  padding: 24px 12px;
+}
+h1 { font-size: 38px; margin: 8px 0; }
+.subtitle { color: #d6d8ed; margin-bottom: 22px; }
+.game {
+  max-width: 540px;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #ffffff30;
+  border-radius: 22px;
+  background: #111a35cc;
+  box-shadow: 0 15px 40px #0005;
+}
+.stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.stat {
+  background: #ffffff12;
+  padding: 10px;
+  border-radius: 12px;
+  flex: 1;
+}
+.stat small { display: block; color: #bfc8e8; }
+.stat strong { font-size: 22px; }
+select, button {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 16px;
+  font-weight: bold;
+}
+select { margin: 8px; background: #fff; }
+button {
+  background: #ffcf66;
+  color: #25213b;
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+#arena {
+  height: 430px;
+  margin: 18px auto;
+  max-width: 380px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 2px solid #ffffff35;
+  background:
+    repeating-linear-gradient(90deg,
+      #ffffff08 0px, #ffffff08 1px,
+      transparent 1px, transparent 25%);
+}
+.lanes {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.lane {
+  position: relative;
+  border-right: 1px solid #ffffff20;
+}
+.lane:last-child { border: 0; }
+.hitline {
+  position: absolute;
+  top: 345px;
+  width: 100%;
+  height: 4px;
+  background: #ffcf66;
+  box-shadow: 0 0 12px #ffcf66;
+}
+.note {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-size: 25px;
+  box-shadow: 0 4px 14px #0005;
+}
+.keylabel {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  color: #fff9;
+  font-size: 20px;
+  font-weight: bold;
+}
+#judgement {
+  min-height: 32px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #ffcf66;
+}
+.controls {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.controls button {
+  padding: 14px 3px;
+  background: #59658e;
+  color: white;
+}
+.controls button:active { background: #ffcf66; color: #222; }
+.help { color: #c9cce0; font-size: 13px; line-height: 1.7; }
+#start { margin: 12px; }
+@media(max-width: 400px) {
+  h1 { font-size: 30px; }
+  .game { padding: 12px; }
+  .note { width: 40px; height: 40px; }
+}
+</style>
+</head>
+<body>
+
+<h1>🎵 School Beat!</h1>
+<p class="subtitle">학교에서 들려오는 소리를 리듬에 맞춰!</p>
+
+<div class="game">
+  <div class="stats">
+    <div class="stat"><small>SCORE</small><strong id="score">0</strong></div>
+    <div class="stat"><small>COMBO</small><strong id="combo">0</strong></div>
+    <div class="stat"><small>TIME</small><strong id="time">55</strong></div>
+  </div>
+
+  <label for="difficulty">난이도 </label>
+  <select id="difficulty">
+    <option value="easy">쉬움</option>
+    <option value="normal" selected>보통</option>
+    <option value="fast">빠르게</option>
+  </select>
+
+  <div id="arena">
+    <div class="lanes" id="lanes">
+      <div class="lane"><div class="keylabel">D ✏️</div></div>
+      <div class="lane"><div class="keylabel">F 🏀</div></div>
+      <div class="lane"><div class="keylabel">J 🔔</div></div>
+      <div class="lane"><div class="keylabel">K 👟</div></div>
+    </div>
+    <div class="hitline"></div>
+  </div>
+
+  <div id="judgement">게임을 시작해 봐!</div>
+  <button id="start">▶ 게임 시작</button>
+
+  <div class="controls">
+    <button data-key="d">D ✏️</button>
+    <button data-key="f">F 🏀</button>
+    <button data-key="j">J 🔔</button>
+    <button data-key="k">K 👟</button>
+  </div>
+
+  <p class="help">
+    노트가 노란색 선에 도착할 때 해당 키를 눌러!<br>
+    PERFECT +100점 · GOOD +50점 · MISS 0점
+  </p>
+</div>
+
+<script>
+const arena = document.getElementById("arena");
+const lanes = [...document.querySelectorAll(".lane")];
+const scoreEl = document.getElementById("score");
+const comboEl = document.getElementById("combo");
+const timeEl = document.getElementById("time");
+const judgement = document.getElementById("judgement");
+const startButton = document.getElementById("start");
+const difficulty = document.getElementById("difficulty");
+
+const keys = ["d", "f", "j", "k"];
+const emojis = ["✏️", "🏀", "🔔", "👟"];
+const colors = ["#f4c95d", "#65b8ff", "#ff8cba", "#9ce3a3"];
+
+let notes = [];
+let score = 0;
+let combo = 0;
+let playing = false;
+let startTime = 0;
+let lastSpawn = 0;
+let animationId = null;
+let audio = null;
+let best = Number(localStorage.getItem("schoolBeatBest") || 0);
+
+const hitY = 345;
+const noteSpeed = {
+  easy: 220,
+  normal: 270,
+  fast: 330
+};
+const spawnInterval = {
+  easy: 850,
+  normal: 680,
+  fast: 520
+};
+
+function sound(lane) {
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === "suspended") audio.resume();
+
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.connect(gain);
+    gain.connect(audio.destination);
+
+    const now = audio.currentTime;
+
+    if (lane === 0) {
+      osc.type = "square";
+      osc.frequency.setValueAtTime(1000, now);
+      osc.frequency.exponentialRampToValueAtTime(500, now + 0.04);
+    } else if (lane === 1) {
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(110, now);
+      osc.frequency.exponentialRampToValueAtTime(45, now + 0.15);
+    } else if (lane === 2) {
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(440, now + 0.35);
+    } else {
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.07);
+    }
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+    osc.start(now);
+    osc.stop(now + 0.36);
+  } catch (e) {
+    console.log("Audio is unavailable", e);
+  }
+}
+
+function updateStats() {
+  scoreEl.textContent = score;
+  comboEl.textContent = combo;
+}
+
+function spawnNote(now) {
+  const lane = Math.floor(Math.random() * 4);
+  const note = document.createElement("div");
+  note.className = "note";
+  note.textContent = emojis[lane];
+  note.style.background = colors[lane];
+  note.style.color = "#20213a";
+  lanes[lane].appendChild(note);
+
+  notes.push({
+    lane,
+    y: -48,
+    element: note,
+    hit: false
+  });
+  lastSpawn = now;
+}
+
+function showResult(message, color = "#ffcf66") {
+  judgement.textContent = message;
+  judgement.style.color = color;
+}
+
+function hit(lane) {
+  if (!playing) return;
+
+  sound(lane);
+
+  let target = null;
+  let bestDistance = Infinity;
+
+  for (const note of notes) {
+    if (note.lane !== lane || note.hit) continue;
+    const distance = Math.abs(note.y - hitY);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      target = note;
+    }
+  }
+
+  if (!target || bestDistance > 85) {
+    combo = 0;
+    updateStats();
+    showResult("MISS", "#ff7070");
+    return;
+  }
+
+  target.hit = true;
+  target.element.remove();
+
+  if (bestDistance < 27) {
+    score += 100;
+    combo++;
+    showResult("PERFECT! +100", "#ffe078");
+  } else {
+    score += 50;
+    combo++;
+    showResult("GOOD! +50", "#8de5ff");
+  }
+
+  notes = notes.filter(n => n !== target);
+  updateStats();
+}
+
+function finishGame() {
+  playing = false;
+  cancelAnimationFrame(animationId);
+
+  notes.forEach(n => n.element.remove());
+  notes = [];
+
+  best = Math.max(best, score);
+  localStorage.setItem("schoolBeatBest", best);
+
+  showResult("게임 종료! 최종 점수: " + score, "#ffe078");
+  startButton.textContent = "↻ 다시 하기";
+}
+
+function gameLoop(timestamp) {
+  if (!playing) return;
+
+  const elapsed = (timestamp - startTime) / 1000;
+  const remaining = Math.max(0, 55 - Math.floor(elapsed));
+  timeEl.textContent = remaining;
+
+  if (remaining <= 0) {
+    finishGame();
+    return;
+  }
+
+  const speed = noteSpeed[difficulty.value];
+  const interval = spawnInterval[difficulty.value];
+  const delta = gameLoop.lastTimestamp
+    ? Math.min((timestamp - gameLoop.lastTimestamp) / 1000, 0.05)
+    : 0;
+  gameLoop.lastTimestamp = timestamp;
+
+  if (timestamp - lastSpawn >= interval) {
+    spawnNote(timestamp);
+  }
+
+  for (let i = notes.length - 1; i >= 0; i--) {
+    const note = notes[i];
+    note.y += speed * delta;
+    note.element.style.top = note.y + "px";
+
+    if (note.y > hitY + 85) {
+      note.element.remove();
+      notes.splice(i, 1);
+      combo = 0;
+      updateStats();
+      showResult("MISS", "#ff7070");
+    }
+  }
+
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+  cancelAnimationFrame(animationId);
+  notes.forEach(n => n.element.remove());
+  notes = [];
+
+  score = 0;
+  combo = 0;
+  updateStats();
+  timeEl.textContent = "55";
+  showResult("준비! 리듬을 타 봐!");
+  startButton.textContent = "게임 진행 중";
+
+  if (audio && audio.state === "suspended") audio.resume();
+
+  playing = true;
+  startTime = performance.now();
+  lastSpawn = 0;
+  gameLoop.lastTimestamp = 0;
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+document.addEventListener("keydown", event => {
+  if (event.repeat) return;
+  const key = event.key.toLowerCase();
+  const lane = keys.indexOf(key);
+  if (lane !== -1) hit(lane);
+});
+
+document.querySelectorAll("[data-key]").forEach(button => {
+  button.addEventListener("pointerdown", () => {
+    hit(keys.indexOf(button.dataset.key));
+  });
+});
+
+startButton.addEventListener("click", () => {
+  if (!playing) startGame();
+});
+
+</script>
+</body>
+</html>
+
