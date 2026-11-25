@@ -4,557 +4,511 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>School Beat: Rhythm Path</title>
+<title>ANIMAL ARENA</title>
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: #101426;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  padding: 20px 12px;
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#17252b;font-family:Arial,sans-serif;color:white}
+canvas{display:block}
+#menu{
+ position:fixed;inset:0;z-index:5;background:#17252bee;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ text-align:center;padding:20px
 }
-
-h1 {
-  font-size: 32px;
-  margin: 8px 0;
-  color: #ffe28a;
+h1{font-size:48px;color:#ffcc57;margin:0 0 10px}
+#choices{display:flex;gap:15px;flex-wrap:wrap;justify-content:center;margin:25px}
+.choice{
+ background:#304650;border:3px solid #718d96;border-radius:15px;
+ padding:18px;width:155px;cursor:pointer;color:white;font-size:17px
 }
-
-.subtitle {
-  color: #bfc7e8;
-  margin-bottom: 18px;
-}
-
-.panel {
-  max-width: 650px;
-  margin: auto;
-  padding: 18px;
-  background: #1b2340;
-  border: 1px solid #ffffff25;
-  border-radius: 20px;
-  box-shadow: 0 12px 35px #0005;
-}
-
-.stats {
-  display: flex;
-  justify-content: space-around;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.stat {
-  flex: 1;
-  padding: 10px 4px;
-  border-radius: 12px;
-  background: #ffffff10;
-}
-
-.stat small {
-  display: block;
-  color: #aeb9df;
-  font-size: 12px;
-}
-
-.stat strong {
-  display: block;
-  margin-top: 5px;
-  font-size: 22px;
-}
-
-select, button {
-  border: 0;
-  border-radius: 11px;
-  padding: 12px 16px;
-  font-size: 15px;
-  font-weight: bold;
-}
-
-select {
-  background: #fff;
-  color: #222;
-  margin: 8px;
-}
-
-button {
-  cursor: pointer;
-  background: #ffcf66;
-  color: #29233c;
-}
-
-button:hover {
-  filter: brightness(1.1);
-}
-
-#start {
-  margin: 10px;
-  min-width: 150px;
-  font-size: 17px;
-}
-
-canvas {
-  display: block;
-  width: 100%;
-  height: 430px;
-  margin: 12px auto;
-  border-radius: 15px;
-  background: #11182e;
-  border: 2px solid #ffffff25;
-  touch-action: manipulation;
-}
-
-#message {
-  min-height: 34px;
-  font-size: 21px;
-  font-weight: bold;
-  color: #ffe28a;
-}
-
-.instructions {
-  color: #bdc5e0;
-  font-size: 13px;
-  line-height: 1.8;
-}
-
-#levelInfo {
-  color: #aeb9df;
-  margin: 5px;
-}
-
-@media(max-width: 450px) {
-  h1 { font-size: 25px; }
-  .panel { padding: 10px; }
-  canvas { height: 390px; }
-}
+.choice.selected{border-color:#ffcc57;background:#52636a}
+.choice span{display:block;font-size:42px;margin-bottom:10px}
+button{cursor:pointer}
+#start{background:#ffcc57;border:0;border-radius:12px;padding:15px 45px;font-size:20px;font-weight:bold}
+#hud{position:fixed;top:15px;left:15px;z-index:2;display:none}
+#healthbar{width:220px;height:18px;background:#555;border-radius:10px;overflow:hidden}
+#health{height:100%;background:#42df76;width:100%}
+#stats{margin-top:7px;text-shadow:1px 1px 3px black}
+#help{position:fixed;bottom:15px;left:15px;z-index:2;display:none;
+ background:#17252bcc;padding:12px;border-radius:10px;line-height:1.7}
+#ult{position:fixed;bottom:20px;right:25px;z-index:2;display:none;
+ background:#ffcc57;color:#222;border:0;border-radius:50%;width:95px;height:95px;font-weight:bold;font-size:15px}
+#message{position:fixed;top:35%;width:100%;text-align:center;font-size:38px;
+ font-weight:bold;text-shadow:2px 3px 4px black;pointer-events:none}
+#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+ font-size:25px;pointer-events:none}
 </style>
 </head>
-
 <body>
 
-<h1>🎵 School Beat</h1>
-<p class="subtitle">RHYTHM PATH · 학교의 리듬을 따라가!</p>
-
-<div class="panel">
-
-  <div class="stats">
-    <div class="stat">
-      <small>SCORE</small>
-      <strong id="score">0</strong>
-    </div>
-    <div class="stat">
-      <small>COMBO</small>
-      <strong id="combo">0</strong>
-    </div>
-    <div class="stat">
-      <small>TILE</small>
-      <strong id="tile">0 / 50</strong>
-    </div>
-  </div>
-
-  <div>
-    <label for="difficulty">난이도 선택</label>
-    <br>
-    <select id="difficulty">
-      <option value="0">1단계 - 연습</option>
-      <option value="1">2단계 - 보통</option>
-      <option value="2">3단계 - 어려움</option>
-      <option value="3">4단계 - 상당히 빠르게</option>
-      <option value="4">5단계 - 불가능한</option>
-      <option value="5">6단계 - 음속</option>
-    </select>
-  </div>
-
-  <p id="levelInfo">1단계 · 연습</p>
-
-  <canvas id="game" width="600" height="430"></canvas>
-
-  <div id="message">게임 시작을 눌러 봐!</div>
-
-  <button id="start">▶ 게임 시작</button>
-
-  <p class="instructions">
-    공이 다음 타일에 도착할 때 박자를 맞춰 눌러!<br>
-    SPACE / 마우스 클릭 / 화면 터치<br>
-    PERFECT +100 · GOOD +50 · MISS 게임 종료
-  </p>
-
+<div id="menu">
+ <h1>🐾 ANIMAL ARENA</h1>
+ <p>동물들의 3D 전투가 시작된다!</p>
+ <div id="choices">
+  <button class="choice selected" data-animal="bear">
+   <span>🐻</span><b>곰</b><p>HP 150 / DMG 10</p><p>느리지만 강력함</p>
+  </button>
+  <button class="choice" data-animal="cat">
+   <span>🐱</span><b>고양이</b><p>HP 70 / DMG 7</p><p>빠르고 민첩함</p>
+  </button>
+  <button class="choice" data-animal="dog">
+   <span>🐶</span><b>개</b><p>HP 100 / DMG 6</p><p>돌격 공격</p>
+  </button>
+ </div>
+ <button id="start">게임 시작</button>
+ <p style="color:#b9c9ce">WASD 이동 · 마우스 조준 · 클릭 공격 · Q 궁극기</p>
 </div>
 
-<script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+<div id="hud">
+ <b id="name">곰</b>
+ <div id="healthbar"><div id="health"></div></div>
+ <div id="stats"></div>
+</div>
+<div id="help">
+ WASD : 이동<br>
+ 마우스 : 시점 조작<br>
+ 왼쪽 클릭 : 공격<br>
+ Q : 궁극기<br>
+ ESC : 마우스 잠금 해제
+</div>
+<button id="ult">궁극기<br>Q</button>
+<div id="crosshair">+</div>
+<div id="message"></div>
 
-const scoreEl = document.getElementById("score");
-const comboEl = document.getElementById("combo");
-const tileEl = document.getElementById("tile");
-const message = document.getElementById("message");
-const startButton = document.getElementById("start");
-const difficulty = document.getElementById("difficulty");
-const levelInfo = document.getElementById("levelInfo");
+<script type="module">
+import * as THREE from
+'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
-const levels = [
-  { name: "연습", interval: 750, window: 120 },
-  { name: "보통", interval: 620, window: 100 },
-  { name: "어려움", interval: 500, window: 80 },
-  { name: "상당히 빠르게", interval: 360, window: 60 },
-  { name: "불가능한", interval: 260, window: 42 },
-  { name: "음속", interval: 180, window: 28 }
-];
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x91c9df);
+scene.fog = new THREE.Fog(0x91c9df,35,75);
 
-let score = 0;
-let combo = 0;
-let tile = 0;
-let playing = false;
-let lastHit = 0;
-let currentLevel = levels[0];
-let audio = null;
-let animation = null;
-let path = [];
-let particles = [];
+const camera = new THREE.PerspectiveCamera(
+ 65,innerWidth/innerHeight,0.1,150
+);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
 
-const TOTAL = 50;
+scene.add(new THREE.HemisphereLight(0xffffff,0x536b42,2));
+const sun=new THREE.DirectionalLight(0xffffff,2);
+sun.position.set(-10,20,10);
+sun.castShadow=true;
+scene.add(sun);
 
-function makePath() {
-  path = [];
+const mat=(color)=>new THREE.MeshStandardMaterial({color,roughness:.8});
+const floor=new THREE.Mesh(
+ new THREE.BoxGeometry(60,1,60),mat(0x63a75a)
+);
+floor.position.y=-.5;
+floor.receiveShadow=true;
+scene.add(floor);
 
-  for (let i = 0; i < TOTAL + 1; i++) {
-    const x = 65 + (i % 5) * 115;
-    const row = Math.floor(i / 5);
-    const direction = row % 2 === 0 ? 1 : -1;
-    const actualX = direction === 1 ? x : 65 + (4 - (i % 5)) * 115;
-
-    const y = 65 + row * 75 + Math.sin(i * 1.7) * 13;
-
-    path.push({
-      x: actualX,
-      y: Math.min(390, y)
-    });
-  }
+// 경기장 벽
+const wallMat=mat(0x557b81);
+for(let i=0;i<4;i++){
+ const wall=new THREE.Mesh(new THREE.BoxGeometry(
+  i<2?60:1,4,i<2?1:60
+ ),wallMat);
+ wall.position.set(
+  i===2?-30:i===3?30:0,
+  1.5,
+  i===0?-30:i===1?30:0
+ );
+ scene.add(wall);
 }
 
-function sound() {
-  try {
-    if (!audio) {
-      audio = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    if (audio.state === "suspended") audio.resume();
-
-    const osc = audio.createOscillator();
-    const gain = audio.createGain();
-
-    osc.connect(gain);
-    gain.connect(audio.destination);
-
-    const now = audio.currentTime;
-    const type = tile % 4;
-
-    const frequencies = [850, 130, 1100, 220];
-
-    osc.type = type === 1 ? "sine" : "triangle";
-    osc.frequency.setValueAtTime(frequencies[type], now);
-
-    if (type === 2) {
-      osc.frequency.exponentialRampToValueAtTime(550, now + 0.18);
-    }
-
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
-
-    osc.start(now);
-    osc.stop(now + 0.2);
-  } catch (e) {
-    console.log(e);
-  }
+// 장애물
+for(let i=0;i<13;i++){
+ const x=(Math.random()-.5)*42;
+ const z=(Math.random()-.5)*42;
+ const rock=new THREE.Mesh(
+  new THREE.BoxGeometry(2+Math.random()*2,2,2+Math.random()*2),
+  mat(0x927b55)
+ );
+ rock.position.set(x,1,z);
+ rock.castShadow=true;
+ scene.add(rock);
 }
 
-function updateStats() {
-  scoreEl.textContent = score;
-  comboEl.textContent = combo;
-  tileEl.textContent = tile + " / " + TOTAL;
-}
+const data={
+ bear:{name:'곰',hp:150,damage:10,range:2,speed:3,color:0x98613c},
+ cat:{name:'고양이',hp:70,damage:7,range:6,speed:20,color:0xe6a6a0},
+ dog:{name:'개',hp:100,damage:6,range:9,speed:15,color:0xd9b36e}
+};
 
-function drawBackground() {
-  ctx.fillStyle = "#11182e";
-  ctx.fillRect(0, 0, 600, 430);
+function animal(type){
+ const g=new THREE.Group();
+ const d=data[type];
+ const body=new THREE.Mesh(
+  new THREE.SphereGeometry(.65,20,16),mat(d.color)
+ );
+ body.position.y=1;
+ body.scale.set(.9,1.1,.8);
+ body.castShadow=true;
+ g.add(body);
 
-  ctx.strokeStyle = "#ffffff08";
-  ctx.lineWidth = 1;
+ const head=new THREE.Mesh(
+  new THREE.SphereGeometry(.48,20,16),mat(d.color)
+ );
+ head.position.set(0,1.85,.15);
+ head.castShadow=true;
+ g.add(head);
 
-  for (let x = 0; x < 600; x += 30) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, 430);
-    ctx.stroke();
+ const dark=mat(0x302321);
+ const eyeMat=mat(0xffffff);
+ for(const x of [-.19,.19]){
+  const eye=new THREE.Mesh(new THREE.SphereGeometry(.065,12,12),eyeMat);
+  eye.position.set(x,1.95,.55);g.add(eye);
+ }
+ const nose=new THREE.Mesh(
+  new THREE.SphereGeometry(.09,12,12),dark
+ );
+ nose.position.set(0,1.75,.61);g.add(nose);
+
+ if(type==='bear'||type==='cat'){
+  for(const x of [-.32,.32]){
+   const ear=new THREE.Mesh(
+    new THREE.SphereGeometry(.2,12,12),mat(d.color)
+   );
+   ear.position.set(x,2.22,.12);g.add(ear);
   }
-
-  for (let y = 0; y < 430; y += 30) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(600, y);
-    ctx.stroke();
+ }
+ if(type==='dog'){
+  for(const x of [-.36,.36]){
+   const ear=new THREE.Mesh(
+    new THREE.SphereGeometry(.18,12,12),mat(0x60452c)
+   );
+   ear.scale.set(.7,1.5,.7);
+   ear.position.set(x,2.08,.1);g.add(ear);
   }
-}
+ }
 
-function drawPath() {
-  if (!path.length) return;
-
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  ctx.beginPath();
-  ctx.moveTo(path[0].x, path[0].y);
-
-  for (let i = 1; i < path.length; i++) {
-    ctx.lineTo(path[i].x, path[i].y);
-  }
-
-  ctx.strokeStyle = "#59658a";
-  ctx.lineWidth = 9;
-  ctx.stroke();
-
-  for (let i = 0; i < path.length; i++) {
-    const p = path[i];
-
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 13, 0, Math.PI * 2);
-
-    if (i < tile) {
-      ctx.fillStyle = "#70e4c2";
-    } else if (i === tile) {
-      ctx.fillStyle = "#ffe28a";
-    } else {
-      ctx.fillStyle = "#66739e";
-    }
-
-    ctx.fill();
-
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-}
-
-function getBallPosition(now) {
-  const a = path[tile];
-  const b = path[Math.min(tile + 1, TOTAL)];
-
-  if (!playing || tile >= TOTAL) return a;
-
-  const progress = Math.min(
-    1,
-    Math.max(0, (now - lastHit) / currentLevel.interval)
+ for(const x of [-.35,.35]){
+  const leg=new THREE.Mesh(
+   new THREE.CylinderGeometry(.14,.15,.65,12),mat(d.color)
   );
-
-  return {
-    x: a.x + (b.x - a.x) * progress,
-    y: a.y + (b.y - a.y) * progress
-  };
+  leg.position.set(x,.35,.1);g.add(leg);
+ }
+ return g;
 }
 
-function drawBall(now) {
-  const p = getBallPosition(now);
+let player,playerType='bear',hp=100,ultReady=true;
+let enemies=[],projectiles=[];
+let playing=false,gameOver=false;
+let yaw=0,pitch=.28;
+let keys={};
+let lastShot=0,ultUntil=0,slowUntil=0;
+let catRevived=false;
+let dogDash=0;
+let mouseDown=false;
 
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, 15, 0, Math.PI * 2);
-  ctx.fillStyle = "#ff6d91";
-  ctx.shadowColor = "#ff6d91";
-  ctx.shadowBlur = 22;
-  ctx.fill();
-  ctx.shadowBlur = 0;
+const menu=document.getElementById('menu');
+const health=document.getElementById('health');
+const stats=document.getElementById('stats');
+const message=document.getElementById('message');
+const ultButton=document.getElementById('ult');
 
-  ctx.beginPath();
-  ctx.arc(p.x - 5, p.y - 5, 4, 0, Math.PI * 2);
-  ctx.fillStyle = "#ffffff";
-  ctx.fill();
+document.querySelectorAll('.choice').forEach(btn=>{
+ btn.onclick=()=>{
+  document.querySelectorAll('.choice').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  playerType=btn.dataset.animal;
+ };
+});
+
+function spawnEnemy(type,x,z){
+ const group=animal(type);
+ group.position.set(x,0,z);
+ scene.add(group);
+ enemies.push({
+  group,type,hp:data[type].hp,
+  maxHp:data[type].hp,
+  attackTime:0
+ });
 }
 
-function drawParticles() {
-  particles.forEach(p => {
-    ctx.globalAlpha = Math.max(0, p.life / 25);
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-    ctx.fill();
+function start(){
+ menu.style.display='none';
+ document.getElementById('hud').style.display='block';
+ document.getElementById('help').style.display='block';
+ ultButton.style.display='block';
 
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life--;
+ player=animal(playerType);
+ player.position.set(0,0,10);
+ scene.add(player);
+ hp=data[playerType].hp;
+ catRevived=false;
+ ultReady=true;
+ gameOver=false;
+ playing=true;
+ yaw=0;
+ pitch=.28;
+
+ enemies.forEach(e=>scene.remove(e.group));
+ enemies=[];
+ for(let i=0;i<5;i++){
+  spawnEnemy(
+   ['bear','cat','dog'][i%3],
+   (Math.random()-.5)*35,
+   -10-Math.random()*15
+  );
+ }
+ updateHUD();
+ renderer.domElement.requestPointerLock?.();
+}
+document.getElementById('start').onclick=start;
+
+function updateHUD(){
+ health.style.width=Math.max(0,hp/data[playerType].hp*100)+'%';
+ document.getElementById('name').textContent=data[playerType].name;
+ stats.textContent=`HP ${Math.ceil(hp)} / ${data[playerType].hp}  |  공격력 ${data[playerType].damage}`;
+ ultButton.textContent=ultReady?'궁극기\\nQ':'충전 중';
+}
+
+function direction(){
+ return new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)).normalize();
+}
+
+function attack(){
+ if(!playing||gameOver)return;
+ const now=performance.now();
+ if(now-lastShot<450)return;
+ lastShot=now;
+
+ const d=data[playerType];
+ const dir=direction();
+
+ if(playerType==='dog'){
+  dogDash=.35;
+  player.position.addScaledVector(dir,1.5);
+ }
+
+ if(playerType==='bear'){
+  enemies.forEach(e=>{
+   if(e.group.position.distanceTo(player.position)<3.1){
+    e.hp-=d.damage;
+   }
   });
+  return;
+ }
 
-  ctx.globalAlpha = 1;
-  particles = particles.filter(p => p.life > 0);
+ const startPos=player.position.clone();
+ startPos.y=1.4;
+ const bullet=new THREE.Mesh(
+  new THREE.SphereGeometry(.17,12,12),
+  mat(playerType==='cat'?0xffe5a0:0xffffff)
+ );
+ bullet.position.copy(startPos);
+ scene.add(bullet);
+ projectiles.push({
+  mesh:bullet,
+  velocity:dir.multiplyScalar(25),
+  damage:d.damage,
+  life:Math.min(d.range/25,1)
+ });
 }
 
-function burst(x, y) {
-  for (let i = 0; i < 12; i++) {
-    const angle = Math.PI * 2 * i / 12;
+function ultimate(){
+ if(!playing||gameOver||!ultReady)return;
+ ultReady=false;
+ const now=performance.now();
 
-    particles.push({
-      x,
-      y,
-      vx: Math.cos(angle) * 2.5,
-      vy: Math.sin(angle) * 2.5,
-      life: 25,
-      color: "#ffe28a"
-    });
+ if(playerType==='bear'){
+  slowUntil=now+3500;
+  enemies.forEach(e=>{
+   if(e.group.position.distanceTo(player.position)<12){
+    e.group.userData.slow=now+3500;
+   }
+  });
+  message.textContent='🐻 땅 구르기!';
+  setTimeout(()=>message.textContent='',1000);
+ }
+
+ if(playerType==='cat'){
+  // 다음 부활을 위한 목숨 예약
+  catRevived=false;
+  message.textContent='🐱 두 개의 목숨!';
+  setTimeout(()=>message.textContent='',1000);
+ }
+
+ if(playerType==='dog'){
+  ultUntil=now+5000;
+  message.textContent='🐶 광견 모드!';
+  setTimeout(()=>message.textContent='',1000);
+ }
+ if(playerType!=='dog'){
+  setTimeout(()=>{ultReady=true;updateHUD()},10000);
+ }else{
+  setTimeout(()=>{ultReady=true;updateHUD()},12000);
+ }
+ updateHUD();
+}
+ultButton.onclick=ultimate;
+
+function playerHit(amount){
+ hp-=amount;
+ if(hp<=0){
+  if(playerType==='cat'&&!catRevived){
+   catRevived=true;
+   hp=data.cat.hp;
+   player.position.set(0,0,10);
+   message.textContent='🐱 다시 부활!';
+   setTimeout(()=>message.textContent='',1200);
+  }else{
+   hp=0;
+   playing=false;
+   gameOver=true;
+   message.textContent='GAME OVER';
+   setTimeout(()=>{
+    menu.style.display='flex';
+    document.getElementById('hud').style.display='none';
+    document.getElementById('help').style.display='none';
+    ultButton.style.display='none';
+    message.textContent='';
+   },2000);
   }
+ }
+ updateHUD();
 }
 
-function draw(now) {
-  drawBackground();
-  drawPath();
-  drawParticles();
-
-  if (tile <= TOTAL) {
-    drawBall(now);
+function removeDead(){
+ enemies=enemies.filter(e=>{
+  if(e.hp<=0){
+   scene.remove(e.group);
+   return false;
   }
+  return true;
+ });
 }
 
-function hit() {
-  if (!playing) return;
+function update(dt){
+ if(!playing||!player)return;
 
-  const now = performance.now();
-  const elapsed = now - lastHit;
-  const difference = Math.abs(elapsed - currentLevel.interval);
+ const d=data[playerType];
+ const now=performance.now();
+ const forward=direction();
+ const right=new THREE.Vector3(-forward.z,0,forward.x);
+ let move=new THREE.Vector3();
 
-  if (difference > currentLevel.window) {
-    if (elapsed < currentLevel.interval - currentLevel.window) {
-      message.textContent = "TOO EARLY!";
-      message.style.color = "#ffad72";
-      return;
-    }
+ if(keys.KeyW)move.add(forward);
+ if(keys.KeyS)move.sub(forward);
+ if(keys.KeyD)move.add(right);
+ if(keys.KeyA)move.sub(right);
+ if(move.length()>0)move.normalize();
 
-    gameOver();
-    return;
+ let speed=d.speed*.28;
+ if(playerType==='dog'&&now<ultUntil)speed+=.4;
+ if(playerType==='dog'&&dogDash>0){
+  move.add(forward.clone().multiplyScalar(2));
+  dogDash-=dt;
+ }
+ player.position.addScaledVector(move,speed*dt);
+ player.position.x=THREE.MathUtils.clamp(player.position.x,-27,27);
+ player.position.z=THREE.MathUtils.clamp(player.position.z,-27,27);
+
+ if(move.length()>0)player.rotation.y=Math.atan2(-move.x,-move.z);
+
+ // 3인칭 카메라
+ const behind=direction().multiplyScalar(-8);
+ camera.position.lerp(
+  new THREE.Vector3(
+   player.position.x+behind.x,
+   player.position.y+5+pitch*5,
+   player.position.z+behind.z
+  ),.12
+ );
+ camera.lookAt(player.position.x,player.position.y+1.3,player.position.z);
+
+ if(mouseDown)attack();
+
+ // 투사체 이동
+ projectiles.forEach(p=>{
+  p.mesh.position.addScaledVector(p.velocity,dt);
+  p.life-=dt;
+  enemies.forEach(e=>{
+   if(p.mesh.position.distanceTo(
+    e.group.position.clone().add(new THREE.Vector3(0,1,0))
+   )<1){
+    e.hp-=p.damage;
+    p.life=0;
+   }
+  });
+ });
+ projectiles=projectiles.filter(p=>{
+  if(p.life<=0){
+   scene.remove(p.mesh);return false;
   }
+  return true;
+ });
 
-  const p = path[tile + 1];
-  const perfectLimit = currentLevel.window * 0.45;
-
-  if (difference <= perfectLimit) {
-    score += 100;
-    combo++;
-    message.textContent = "PERFECT! +100";
-    message.style.color = "#ffe28a";
-  } else {
-    score += 50;
-    combo++;
-    message.textContent = "GOOD! +50";
-    message.style.color = "#8de5ff";
+ // 적 AI
+ enemies.forEach(e=>{
+  const pos=e.group.position;
+  const delta=player.position.clone().sub(pos);
+  const dist=delta.length();
+  const slow=now<(e.group.userData.slow||0);
+  if(dist>2){
+   delta.y=0;
+   delta.normalize();
+   pos.addScaledVector(delta,(slow?1.1:2.1)*dt);
+   e.group.rotation.y=Math.atan2(-delta.x,-delta.z);
   }
-
-  tile++;
-  lastHit = now;
-
-  sound();
-  if (p) burst(p.x, p.y);
-
-  updateStats();
-
-  if (tile >= TOTAL) {
-    winGame();
+  if(dist<2.7&&now-e.attackTime>1000){
+   e.attackTime=now;
+   playerHit(5);
   }
+ });
+ removeDead();
+
+ if(enemies.length===0){
+  for(let i=0;i<5;i++)
+   spawnEnemy(['bear','cat','dog'][i%3],
+    (Math.random()-.5)*35,-15-Math.random()*10);
+ }
+
+ updateHUD();
 }
 
-function gameOver() {
-  playing = false;
-  cancelAnimationFrame(animation);
+document.addEventListener('keydown',e=>{
+ keys[e.code]=true;
+ if(e.code==='KeyQ')ultimate();
+});
+document.addEventListener('keyup',e=>keys[e.code]=false);
+document.addEventListener('mousedown',e=>{
+ if(e.button===0&&playing)mouseDown=true;
+});
+document.addEventListener('mouseup',()=>mouseDown=false);
 
-  message.textContent = "MISS! 게임 종료 · 점수: " + score;
-  message.style.color = "#ff7187";
-  startButton.textContent = "↻ 다시 도전";
-}
-
-function winGame() {
-  playing = false;
-  cancelAnimationFrame(animation);
-
-  score += combo * 20;
-  updateStats();
-
-  message.textContent = "🎉 CLEAR! 최종 점수: " + score;
-  message.style.color = "#ffe28a";
-  startButton.textContent = "↻ 다시 플레이";
-}
-
-function loop(now) {
-  if (!playing) return;
-
-  const elapsed = now - lastHit;
-
-  if (elapsed > currentLevel.interval + currentLevel.window) {
-    gameOver();
-    draw(now);
-    return;
-  }
-
-  draw(now);
-  animation = requestAnimationFrame(loop);
-}
-
-function startGame() {
-  cancelAnimationFrame(animation);
-
-  currentLevel = levels[Number(difficulty.value)];
-
-  score = 0;
-  combo = 0;
-  tile = 0;
-  particles = [];
-
-  makePath();
-  updateStats();
-
-  lastHit = performance.now();
-  playing = true;
-
-  levelInfo.textContent =
-    (Number(difficulty.value) + 1) + "단계 · " +
-    currentLevel.name + " · " +
-    Math.round(60000 / currentLevel.interval) + " BPM";
-
-  message.textContent = "박자를 맞춰!";
-  message.style.color = "#ffe28a";
-
-  startButton.textContent = "플레이 중";
-
-  if (audio && audio.state === "suspended") {
-    audio.resume();
-  }
-
-  draw(lastHit);
-  animation = requestAnimationFrame(loop);
-}
-
-startButton.addEventListener("click", () => {
-  if (!playing) startGame();
+document.addEventListener('mousemove',e=>{
+ if(document.pointerLockElement===renderer.domElement){
+  yaw-=e.movementX*.003;
+  pitch=THREE.MathUtils.clamp(
+   pitch-e.movementY*.002,-.3,1.0
+  );
+ }
+});
+renderer.domElement.addEventListener('click',()=>{
+ if(playing&&document.pointerLockElement!==renderer.domElement)
+  renderer.domElement.requestPointerLock();
 });
 
-document.addEventListener("keydown", e => {
-  if (e.code === "Space" || e.code === "Enter") {
-    e.preventDefault();
-    hit();
-  }
-});
+const clock=new THREE.Clock();
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.05);
+ update(dt);
+ renderer.render(scene,camera);
+}
+animate();
 
-canvas.addEventListener("pointerdown", () => {
-  hit();
+addEventListener('resize',()=>{
+ camera.aspect=innerWidth/innerHeight;
+ camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
 });
-
-difficulty.addEventListener("change", () => {
-  const n = Number(difficulty.value);
-  levelInfo.textContent =
-    (n + 1) + "단계 · " + levels[n].name;
-});
-
-makePath();
-draw(0);
 </script>
-
 </body>
 </html>
