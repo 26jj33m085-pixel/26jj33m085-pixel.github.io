@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANIMAL BRAWL</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#17212b;color:white;font-family:Arial,sans-serif;text-align:center}
+h1{color:#ffe36e;margin:15px 0 5px;font-size:34px}
+p{margin:5px}
+#menu{padding:15px}
+button{border:0;border-radius:12px;padding:12px 20px;margin:5px;background:#ffcf55;color:#252525;font-weight:bold;cursor:pointer;font-size:16px}
+button:hover{filter:brightness(1.12)}
+#game{display:none;margin:auto;max-width:960px;padding:8px}
+#hud{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:8px 0;font-weight:bold}
+canvas{width:100%;background:#9acb78;border:5px solid #e9dca8;border-radius:12px;display:block;touch-action:none}
+#help{color:#dce7ed;font-size:13px;margin:10px}
+</style>
+</head>
+<body>
+<h1>🐾 ANIMAL BRAWL</h1>
+<p>동물 친구들의 아레나 대결!</p>
+
+<div id="menu">
+  <h2>캐릭터 선택</h2>
+  <button onclick="start('bear')">🐻 곰</button>
+  <button onclick="start('cat')">🐱 고양이</button>
+  <button onclick="start('dog')">🐶 강아지</button>
+  <p>적 동물들을 물리치고 최고 점수를 기록해 봐!</p>
+</div>
+
+<div id="game">
+  <div id="hud">
+    <span id="health">❤️ 체력: 100</span>
+    <span id="score">⭐ 점수: 0</span>
+    <span id="timer">⏱️ 90</span>
+  </div>
+  <canvas id="canvas" width="900" height="560"></canvas>
+  <div id="help">
+    이동: WASD / 방향키 · 조준: 마우스 · 공격: 클릭 · 대시: Space · 특수 공격: E
+  </div>
+  <button onclick="restart()">다시 시작</button>
+  <button onclick="back()">캐릭터 변경</button>
+</div>
+
+<script>
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const W=canvas.width,H=canvas.height;
+const types={
+ bear:{emoji:"🐻",speed:2.5,hp:140,damage:16},
+ cat:{emoji:"🐱",speed:3.7,hp:90,damage:12},
+ dog:{emoji:"🐶",speed:3.1,hp:110,damage:14}
+};
+let player,enemies=[],bullets=[],particles=[];
+let keys={},mouse={x:450,y:280,down:false};
+let score=0,time=90,running=false,last=0,spawn=0;
+let obstacles=[
+ {x:180,y:140,r:38},{x:700,y:140,r:38},
+ {x:180,y:410,r:38},{x:700,y:410,r:38},
+ {x:450,y:280,r:45}
+];
+
+function start(type){
+ document.getElementById("menu").style.display="none";
+ document.getElementById("game").style.display="block";
+ init(type);
+}
+function restart(){
+ init(player.type);
+}
+function back(){
+ running=false;
+ document.getElementById("game").style.display="none";
+ document.getElementById("menu").style.display="block";
+}
+function init(type){
+ const t=types[type];
+ player={x:450,y:280,r:23,type,emoji:t.emoji,
+ hp:t.hp,maxHp:t.hp,speed:t.speed,damage:t.damage,
+ cooldown:0,dash:0,special:0};
+ enemies=[];bullets=[];particles=[];
+ score=0;time=90;spawn=0;running=true;
+ for(let i=0;i<4;i++)makeEnemy();
+ last=performance.now();
+ requestAnimationFrame(loop);
+}
+function makeEnemy(){
+ const choices=["bear","cat","dog"].filter(x=>x!==player.type);
+ const type=choices[Math.floor(Math.random()*choices.length)];
+ const side=Math.floor(Math.random()*4);
+ let x=side===0?30:side===1?870:Math.random()*900;
+ let y=side===2?30:side===3?530:Math.random()*560;
+ enemies.push({x,y,r:21,type,emoji:types[type].emoji,
+ hp:55,maxHp:55,speed:1.2+Math.random()*.45,
+ cooldown:Math.random()*80});
+}
+function moveEntity(o,dx,dy){
+ let nx=Math.max(o.r,Math.min(W-o.r,o.x+dx));
+ let ny=Math.max(o.r,Math.min(H-o.r,o.y+dy));
+ for(const b of obstacles){
+  if(Math.hypot(nx-b.x,ny-b.y)<o.r+b.r){
+   return;
+  }
+ }
+ o.x=nx;o.y=ny;
+}
+function shoot(from,x,y,damage,enemy=false){
+ const a=Math.atan2(y-from.y,x-from.x);
+ bullets.push({x:from.x,y:from.y,vx:Math.cos(a)*7,
+ vy:Math.sin(a)*7,damage,enemy,life:90});
+}
+function burst(x,y,color){
+ for(let i=0;i<8;i++){
+  const a=Math.random()*Math.PI*2;
+  particles.push({x,y,vx:Math.cos(a)*2,vy:Math.sin(a)*2,life:25,color});
+ }
+}
+function update(dt){
+ const f=dt/16.67;
+ if(keys["w"]||keys["arrowup"])moveEntity(player,0,-player.speed*f);
+ if(keys["s"]||keys["arrowdown"])moveEntity(player,0,player.speed*f);
+ if(keys["a"]||keys["arrowleft"])moveEntity(player,-player.speed*f,0);
+ if(keys["d"]||keys["arrowright"])moveEntity(player,player.speed*f,0);
+ if(player.cooldown>0)player.cooldown-=f;
+ if(player.dash>0)player.dash-=f;
+ if(player.special>0)player.special-=f;
+
+ if(mouse.down&&player.cooldown<=0){
+  shoot(player,mouse.x,mouse.y,player.damage);
+  player.cooldown=17;
+ }
+ if(keys[" "]&&player.dash<=0){
+  const a=Math.atan2(mouse.y-player.y,mouse.x-player.x);
+  moveEntity(player,Math.cos(a)*75,Math.sin(a)*75);
+  player.dash=65;keys[" "]=false;
+ }
+ if(keys["e"]&&player.special<=0){
+  for(const e of enemies){
+   if(Math.hypot(e.x-player.x,e.y-player.y)<145){
+    e.hp-=35;burst(e.x,e.y,"#ffe36e");
+   }
+  }
+  player.special=300;keys["e"]=false;
+ }
+ for(const e of enemies){
+  const a=Math.atan2(player.y-e.y,player.x-e.x);
+  moveEntity(e,Math.cos(a)*e.speed*f,Math.sin(a)*e.speed*f);
+  if(e.cooldown>0)e.cooldown-=f;
+  if(e.cooldown<=0&&Math.hypot(player.x-e.x,player.y-e.y)<330){
+   shoot(e,player.x,player.y,7,true);
+   e.cooldown=75+Math.random()*30;
+  }
+ }
+ for(let i=bullets.length-1;i>=0;i--){
+  const b=bullets[i];b.x+=b.vx*f;b.y+=b.vy*f;b.life-=f;
+  let hit=false;
+  if(b.enemy){
+   if(Math.hypot(b.x-player.x,b.y-player.y)<player.r+7){
+    player.hp-=b.damage;hit=true;burst(player.x,player.y,"#ff7777");
+   }
+  }else{
+   for(const e of enemies){
+    if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+7){
+     e.hp-=b.damage;hit=true;burst(e.x,e.y,"#ffe36e");break;
+    }
+   }
+  }
+  if(hit||b.life<=0||b.x<0||b.x>W||b.y<0||b.y>H)bullets.splice(i,1);
+ }
+ for(let i=enemies.length-1;i>=0;i--){
+  if(enemies[i].hp<=0){
+   burst(enemies[i].x,enemies[i].y,"#ffffff");
+   enemies.splice(i,1);score+=10;
+  }
+ }
+ for(let i=particles.length-1;i>=0;i--){
+  const p=particles[i];p.x+=p.vx*f;p.y+=p.vy*f;p.life-=f;
+  if(p.life<=0)particles.splice(i,1);
+ }
+ spawn+=dt;
+ if(spawn>2400&&enemies.length<9){makeEnemy();spawn=0;}
+ time-=dt/1000;
+ if(time<=0||player.hp<=0){
+  time=Math.max(0,time);running=false;
+ }
+ document.getElementById("health").textContent="❤️ 체력: "+Math.max(0,Math.ceil(player.hp));
+ document.getElementById("score").textContent="⭐ 점수: "+score;
+ document.getElementById("timer").textContent="⏱️ "+Math.ceil(time);
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ ctx.fillStyle="#9acb78";ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle="rgba(255,255,255,.18)";ctx.lineWidth=2;
+ for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+ for(let y=0;y<H;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+ for(const b of obstacles){
+  ctx.fillStyle="#638b4c";ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#82a95e";ctx.beginPath();ctx.arc(b.x-8,b.y-9,b.r*.55,0,Math.PI*2);ctx.fill();
+ }
+ for(const b of bullets){
+  ctx.fillStyle=b.enemy?"#ff7777":"#fff18a";
+  ctx.beginPath();ctx.arc(b.x,b.y,7,0,Math.PI*2);ctx.fill();
+ }
+ for(const e of enemies)drawAnimal(e);
+ drawAnimal(player);
+ for(const p of particles){
+  ctx.globalAlpha=Math.max(0,p.life/25);
+  ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,5,5);ctx.globalAlpha=1;
+ }
+ if(!running){
+  ctx.fillStyle="rgba(0,0,0,.65)";ctx.fillRect(0,0,W,H);
+  ctx.textAlign="center";ctx.fillStyle="white";
+  ctx.font="bold 46px Arial";
+  ctx.fillText(player.hp<=0?"GAME OVER":"TIME UP",W/2,H/2-20);
+  ctx.font="bold 26px Arial";
+  ctx.fillText("최종 점수: "+score,W/2,H/2+30);
+  ctx.font="18px Arial";ctx.fillText("다시 시작 버튼을 눌러 보세요!",W/2,H/2+70);
+ }
+}
+function drawAnimal(o){
+ ctx.save();
+ ctx.fillStyle="rgba(0,0,0,.2)";
+ ctx.beginPath();ctx.ellipse(o.x,o.y+17,o.r*1.1,8,0,0,Math.PI*2);ctx.fill();
+ ctx.font="38px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+ ctx.fillText(o.emoji,o.x,o.y);
+ if(o!==player){
+  ctx.fillStyle="#4c2525";ctx.fillRect(o.x-22,o.y-32,44,5);
+  ctx.fillStyle="#ff6868";ctx.fillRect(o.x-22,o.y-32,44*Math.max(0,o.hp/o.maxHp),5);
+ }
+ ctx.restore();
+}
+function loop(now){
+ if(!running&&player.hp>0&&time>0)return;
+ const dt=Math.min(40,now-last);last=now;
+ if(running)update(dt);
+ draw();
+ if(running)requestAnimationFrame(loop);
+}
+window.addEventListener("keydown",e=>{
+ const k=e.key.toLowerCase();keys[k]=true;
+ if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();
+});
+window.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+canvas.addEventListener("mousemove",e=>{
+ const r=canvas.getBoundingClientRect();
+ mouse.x=(e.clientX-r.left)*W/r.width;
+ mouse.y=(e.clientY-r.top)*H/r.height;
+});
+canvas.addEventListener("mousedown",()=>mouse.down=true);
+window.addEventListener("mouseup",()=>mouse.down=false);
+canvas.addEventListener("touchstart",e=>{
+ const t=e.touches[0],r=canvas.getBoundingClientRect();
+ mouse.x=(t.clientX-r.left)*W/r.width;
+ mouse.y=(t.clientY-r.top)*H/r.height;
+ mouse.down=true;
+},{passive:true});
+canvas.addEventListener("touchend",()=>mouse.down=false);
+</script>
+</body>
+</html>
